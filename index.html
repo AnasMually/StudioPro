@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استوديو موك آب الشاشات الاحترافي</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Top Header -->
+    <header>
+        <div class="brand">🎨 Studio<span style="color:var(--text-muted)">Pro</span></div>
+        <div class="header-actions">
+            <!-- Global History Controls -->
+            <button class="btn" id="undoBtn" title="تراجع (Ctrl+Z)" disabled>↶</button>
+            <button class="btn" id="redoBtn" title="إعادة (Ctrl+Shift+Z)" disabled>↷</button>
+            <button class="btn btn-danger" id="deleteBtn">🗑️ حذف العنصر</button>
+            <button class="btn btn-primary" id="exportBtn">💾 تصدير الصورة</button>
+        </div>
+    </header>
+
+    <div class="app-layout">
+        <!-- LEFT SIDEBAR: Creation & Assets -->
+        <aside class="sidebar sidebar-left">
+
+            <!-- Add Elements -->
+            <div class="panel-section">
+                <div class="section-header">إضافة محتوى</div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="document.getElementById('imageInput').click()"
+                        style="flex:2">
+                        <span>🖼️ صورة </span>
+                    </button>
+                    <button class="btn" id="addTextBtn"><span>📝 نص</span></button>
+                </div>
+                <!-- Hidden inputs -->
+                <input type="file" id="imageInput" accept="image/*" multiple>
+            </div>
+
+            <!-- Aspect Ratio -->
+            <div class="panel-section">
+                <div class="section-header">أبعاد التصميم</div>
+                <div class="aspect-grid">
+                    <div class="aspect-option active aspect-btn" data-aspect="portrait">
+                        <span>📱</span> <small>Story ID (9:16)</small>
+                    </div>
+                    <div class="aspect-option aspect-btn" data-aspect="landscape">
+                        <span>💻</span> <small>Post HD (16:9)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backgrounds -->
+            <div class="panel-section">
+                <div class="section-header">
+                    <span>الخلفية</span>
+                    <select id="bgType" style="width: 110px; padding: 0.2rem; font-size: 0.8rem;">
+                        <option value="gradient">احترافية</option>
+                        <option value="simple">تدرجات</option>
+                        <option value="solid">لون</option>
+                        <option value="image">صورة</option>
+                    </select>
+                </div>
+
+                <!-- Dynamic BG Content -->
+                <!-- Dynamic BG Content -->
+                <div id="gradientSection">
+                    <button class="btn" id="randomBg" style="width:100%; margin-bottom:0.8rem">🎲 خلط عشوائي</button>
+                    <div class="grid-3" id="bgGallery"></div> <!-- Removed max-height/overflow for new layout -->
+                    <div class="pagination-controls"
+                        style="display:flex; justify-content:space-between; margin-top:0.5rem">
+                        <button class="btn btn-sm" id="bgPrevBtn" style="width:auto">❮ السابق</button>
+                        <span id="bgPageIndicator"
+                            style="font-size:0.8rem; align-self:center; color:var(--text-muted)">1 / 1</span>
+                        <button class="btn btn-sm" id="bgNextBtn" style="width:auto">التالي ❯</button>
+                    </div>
+                </div>
+
+                <div id="simpleSection" style="display:none;">
+                    <div class="grid-3" id="simpleGallery"></div>
+                    <div class="pagination-controls"
+                        style="display:flex; justify-content:space-between; margin-top:0.5rem">
+                        <button class="btn btn-sm" id="simplePrevBtn" style="width:auto">❮ السابق</button>
+                        <span id="simplePageIndicator"
+                            style="font-size:0.8rem; align-self:center; color:var(--text-muted)">1 / 1</span>
+                        <button class="btn btn-sm" id="simpleNextBtn" style="width:auto">التالي ❯</button>
+                    </div>
+                </div>
+
+                <div id="solidSection" style="display:none;">
+                    <input type="color" id="solidColor" value="#6366f1">
+                </div>
+
+                <div id="imageSection" style="display:none;">
+                    <button class="btn" onclick="document.getElementById('bgImageInput').click()"
+                        style="width:100%; height:100px; border-style: dashed;">
+                        📁 رفع خلفية
+                    </button>
+                    <input type="file" id="bgImageInput" accept="image/*">
+                </div>
+            </div>
+
+            <!-- Batch Export -->
+            <div class="panel-section" style="margin-top: auto;">
+                <div class="section-header">التصدير الجماعي (JSON)</div>
+                <button class="btn" id="generateAllBtn" style="font-size:0.8rem">⚡ توليد الملفات (ZIP)</button>
+                <textarea id="jsonInput" placeholder='{"key": "text"}'
+                    style="min-height: 100px; padding:0.5rem; margin-top:0.5rem; font-family:monospace; font-size:0.8rem; border:1px solid var(--border-color); background:rgba(0,0,0,0.2); color:var(--text-muted); border-radius:6px; resize:vertical;"></textarea>
+                <!-- Kept hidden/minimized for clean UI unless needed, or we can make a modal for it? Kept as is for function compatibility -->
+            </div>
+        </aside>
+
+        <!-- CENTER: Canvas Stage -->
+        <main class="main-stage" id="canvasArea">
+            <div class="floating-hint">
+                <span style="opacity:0.7">الاختصارات:</span><br>
+                Ctrl+Z / +Shift+Z : تراجع / إعادة<br>
+                Drag : تحريك العنصر<br>
+                Shift+Drag : تدوير<br>
+                Alt+↑/↓ : تغيير الحجم<br>
+                Shift+Arrows : تحريك سريع<br>
+                Delete : حذف العنصر<br>
+                Esc : إخفاء التحديد
+            </div>
+
+            <canvas id="mainCanvas"></canvas>
+
+            <div class="floating-controls">
+                <div class="zoom-group">
+                    <button class="btn" id="zoomOut" style="width:32px; padding:0">-</button>
+                    <span class="zoom-val" id="zoomDisplay">25%</span>
+                    <button class="btn" id="zoomIn" style="width:32px; padding:0">+</button>
+                </div>
+                <div style="width:1px; height:20px; background:rgba(255,255,255,0.2)"></div>
+                <button class="btn" id="zoomReset" style="font-size:0.8rem">احتواء</button>
+            </div>
+
+            <!-- Hidden inputs needed for logic -->
+            <input type="number" id="zoomInput" value="25" min="1" max="300" step="5" style="display:none">
+        </main>
+
+        <!-- RIGHT SIDEBAR: Properties -->
+        <aside class="sidebar sidebar-right">
+
+            <!-- Layers -->
+            <div class="panel-section">
+                <div class="section-header">الطبقات / العناصر</div>
+                <div class="elements-list" id="elementsList" style="max-height: 150px; overflow-y: auto;">
+                    <!-- JS fills this -->
+                </div>
+            </div>
+
+            <div style="width: 100%; height: 1px; background: var(--border-color); margin: 0.5rem 0;"></div>
+
+            <!-- Properties (Dynamic based on selection) -->
+            <div class="panel-section">
+                <div class="section-header">خصائص العنصر المحدد</div>
+
+                <!-- Text-only Trigger (Logic uses modal, but we can put Edit btn here) -->
+                <button class="btn btn-secondary" id="textModalBtn" style="display:none;">✏️ تعديل النص</button>
+
+                <!-- Frame Settings (Always visible but effective only on Image) -->
+                <label style="font-size:0.8rem; margin-top:0.5rem">شكل الإطار</label>
+                <div class="grid-2" id="deviceGrid">
+                    <!-- JS fills this -->
+                </div>
+
+                <label style="font-size:0.8rem; margin-top:0.8rem">لون الإطار</label>
+                <div class="color-palette">
+                    <div class="color-dot" data-color="#000000" style="background:#000000;"></div>
+                    <div class="color-dot" data-color="#1a1a1a" style="background:#1a1a1a;"></div>
+                    <div class="color-dot" data-color="#374151" style="background:#374151;"></div>
+                    <div class="color-dot" data-color="#9ca3af" style="background:#9ca3af;"></div>
+                    <div class="color-dot" data-color="#ffffff" style="background:#ffffff;"></div>
+                    <div class="color-dot" data-color="#ef4444" style="background:#ef4444;"></div>
+                    <div class="color-dot" data-color="#f59e0b" style="background:#f59e0b;"></div>
+                    <div class="color-dot" data-color="#10b981" style="background:#10b981;"></div>
+                    <div class="color-dot" data-color="#3b82f6" style="background:#3b82f6;"></div>
+                    <div class="color-dot" data-color="#8b5cf6" style="background:#8b5cf6;"></div>
+                    <div class="color-dot" data-color="#ec4899" style="background:#ec4899;"></div>
+                    <div class="color-dot" data-color="#f43f5e" style="background:#f43f5e;"></div>
+                </div>
+                <input type="color" id="frameColorPicker" value="#1a1a1a" style="margin-top:0.5rem; height: 30px;">
+
+                <label style="font-size:0.8rem; margin-top:1rem; display:flex; justify-content:space-between;">
+                    <span>تدوير الزوايا</span>
+                    <span id="borderRadiusValue" style="color:var(--accent)">10</span>
+                </label>
+                <input type="range" id="borderRadiusSlider" min="0" max="80" value="10">
+
+                <label style="font-size:0.8rem; margin-top:0.8rem; display:flex; justify-content:space-between;">
+                    <span>عمق الظل (Shadow)</span>
+                    <span id="shadowValue" style="color:var(--accent)">0</span>
+                </label>
+                <input type="range" id="shadowSlider" min="0" max="100" value="0">
+            </div>
+
+            <div id="activeIndicator" style="display:none"></div> <!-- Logic Hook -->
+        </aside>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="textModal">
+        <div class="modal-box">
+            <div class="section-header" style="margin-bottom:1rem; font-size:1.1rem">
+                تعديل النص
+                <button class="close-btn" id="closeTextModal" style="color:white;cursor:pointer;">×</button>
+            </div>
+            <div class="panel-section">
+                <textarea id="textContent" placeholder="اكتب النص هنا..."
+                    style="min-height:100px; font-size:1.1rem"></textarea>
+
+                <button class="btn" id="copyAiPromptBtn" style="font-size:0.8rem; background:rgba(255,255,255,0.05)">🤖
+                    نسخ برومبت الترجمة (AI)</button>
+
+                <label>الحجم: <span id="fontSizeValue">48</span>px</label>
+                <input type="range" id="fontSize" min="20" max="200" value="48">
+
+                <label>اللون</label>
+                <input type="color" id="textColor" value="#ffffff">
+
+                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer">
+                    <input type="checkbox" id="textShadow" checked style="width:auto">
+                    تفعيل ظل النص
+                </label>
+
+                <button class="btn btn-primary" id="confirmTextBtn" style="margin-top:1rem; width:100%">✅ تأكيد</button>
+            </div>
+        </div>
+    </div>
+    <script src="app-1.js"></script>
+    <script src="app-2.js"></script>
+    <script src="app-3.js"></script>
+    <script src="app-4.js"></script>
+    <script src="app-5.js"></script>
+    <script src="app-6.js"></script>
+</body>
+
+</html>
