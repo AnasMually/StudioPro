@@ -1,0 +1,1 @@
+// StudioPro AI prompt helper
