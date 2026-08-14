@@ -2,17 +2,64 @@
   'use strict';
   const S=window.StudioPro;
   const L=window.StudioProLocalization={parsed:null,base:null,valid:[]};
-  L.refreshTextItems=()=>{const box=document.getElementById('translationItems');if(!box)return;const texts=S.getTextElements();box.innerHTML='';if(!texts.length){box.innerHTML='<div class="section-help">أضف نصًا واحدًا على الأقل ليظهر هنا.</div>';return;}texts.forEach(el=>{const row=document.createElement('div');row.className='translation-item';const id=document.createElement('div');id.className='translation-id';id.textContent=el.translationKey||el.id;const src=document.createElement('div');src.className='translation-source';src.textContent=el.content||'';row.append(id,src);box.appendChild(row);});};
-  L.buildLanguages=()=>{const grid=document.getElementById('languageGrid');grid.innerHTML='';S.languages.forEach(([code,name])=>{const label=document.createElement('label');label.className='language-chip';const input=document.createElement('input');input.type='checkbox';input.value=code;input.checked=true;const text=document.createElement('span');text.textContent=`${code} · ${name}`;label.append(input,text);grid.appendChild(label);});};
+
+  L.refreshTextItems=()=>{
+    const box=document.getElementById('translationItems');if(!box)return;
+    const texts=S.getTextElements();box.innerHTML='';
+    if(!texts.length){box.innerHTML='<div class="section-help">أضف نصًا واحدًا على الأقل ليظهر هنا.</div>';return;}
+    texts.forEach(el=>{const row=document.createElement('div');row.className='translation-item';const id=document.createElement('div');id.className='translation-id';id.textContent=el.translationKey||el.id;const src=document.createElement('div');src.className='translation-source';src.textContent=el.content||'';row.append(id,src);box.appendChild(row);});
+  };
+
+  L.buildLanguages=()=>{
+    const grid=document.getElementById('languageGrid');grid.innerHTML='';
+    S.languages.forEach(([code,name])=>{const label=document.createElement('label');label.className='language-chip';const input=document.createElement('input');input.type='checkbox';input.value=code;input.checked=true;const text=document.createElement('span');text.textContent=`${code} · ${name}`;label.append(input,text);grid.appendChild(label);});
+  };
   L.selected=()=>[...document.querySelectorAll('#languageGrid input:checked')].map(x=>x.value);
   L.name=code=>S.languages.find(([c])=>c===code)?.[1]||code;
-  L.makePrompt=()=>{const texts=S.getTextElements(),targets=L.selected();if(!texts.length)throw new Error('أضف نصًا واحدًا على الأقل قبل إنشاء تعليمات الترجمة.');if(!targets.length)throw new Error('اختر لغة واحدة على الأقل.');const items=texts.map(el=>({id:el.translationKey,text:el.content})),example={schema_version:1,translations:{[targets[0]]:Object.fromEntries(items.map(i=>[i.id,'...']))}};return`Act as a senior mobile-app localization specialist for App Store and Google Play marketing screenshots.\n\nTranslate every source item independently into every target language listed below.\n\nSOURCE ITEMS (IDs are immutable and must be returned exactly):\n${JSON.stringify(items,null,2)}\n\nTARGET LANGUAGES:\n${targets.map(c=>`${c} (${L.name(c)})`).join(', ')}\n\nRULES:\n1. Return ONLY valid JSON. No Markdown, no code fences, no explanations.\n2. Do not merge, remove, rename, reorder, or invent text IDs.\n3. Translate each item as a separate marketing string while preserving its original meaning and tone.\n4. Keep wording natural and concise for a mobile app screenshot. Do not add claims, prices, rankings, awards, or facts not present in the source.\n5. Preserve deliberate line breaks when meaningful. Encode them as \\n inside JSON strings.\n6. Every requested language must contain every source ID.\n7. Use the exact language codes supplied above under "translations".\n\nREQUIRED RESPONSE SCHEMA:\n${JSON.stringify(example,null,2)}\n\nThe complete response must use:\n{"schema_version":1,"translations":{"<language-code>":{"<text-id>":"translated text"}}}`;};
+
+  L.makePrompt=()=>{
+    const texts=S.getTextElements(),targets=L.selected();
+    if(!texts.length)throw new Error('أضف نصًا واحدًا على الأقل قبل إنشاء تعليمات الترجمة.');
+    if(!targets.length)throw new Error('اختر لغة واحدة على الأقل.');
+    const items=texts.map(el=>({id:el.translationKey,text:el.content})),example={schema_version:1,translations:{[targets[0]]:Object.fromEntries(items.map(i=>[i.id,'...']))}};
+    return`Act as a senior mobile-app localization specialist for App Store and Google Play marketing screenshots.\n\nTranslate every source item independently into every target language listed below.\n\nSOURCE ITEMS (IDs are immutable and must be returned exactly):\n${JSON.stringify(items,null,2)}\n\nTARGET LANGUAGES:\n${targets.map(c=>`${c} (${L.name(c)})`).join(', ')}\n\nRULES:\n1. Return ONLY valid JSON. No Markdown, no code fences, no explanations.\n2. Do not merge, remove, rename, reorder, or invent text IDs.\n3. Translate each item as a separate marketing string while preserving its original meaning and tone.\n4. Keep wording natural and concise for a mobile app screenshot. Do not add claims, prices, rankings, awards, or facts not present in the source.\n5. Preserve deliberate line breaks when meaningful. Encode them as \\n inside JSON strings.\n6. Every requested language must contain every source ID.\n7. Use the exact language codes supplied above under "translations".\n\nREQUIRED RESPONSE SCHEMA:\n${JSON.stringify(example,null,2)}\n\nThe complete response must use:\n{"schema_version":1,"translations":{"<language-code>":{"<text-id>":"translated text"}}}`;
+  };
+
   L.copyText=text=>{const a=document.createElement('textarea');a.value=text;a.readOnly=true;a.style.cssText='position:fixed;opacity:0;pointer-events:none;inset:0';document.body.appendChild(a);a.focus();a.select();a.setSelectionRange(0,a.value.length);let ok=false;try{ok=document.execCommand('copy');}catch(_){}a.remove();return ok;};
   L.strip=v=>{const t=String(v||'').trim(),m=t.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);return m?m[1].trim():t;};
-  L.captureBase=()=>{L.base=S.getTextElements().map(el=>({id:el.id,key:el.translationKey,content:el.content,fontSize:el.fontSize,scale:el.scale,x:el.x,y:el.y,rotation:el.rotation}));};
-  L.restoreBase=(render=true)=>{if(!L.base)return;L.base.forEach(b=>{const el=S.state.elements.find(x=>x.id===b.id&&x.type==='text');if(!el)return;Object.assign(el,{content:b.content,fontSize:b.fontSize,scale:b.scale,x:b.x,y:b.y,rotation:b.rotation});});if(render){S.render();S.syncAllUI();}};
-  L.validate=p=>{if(!p||typeof p!=='object')throw new Error('JSON غير صالح.');if(p.schema_version!==1)throw new Error('schema_version يجب أن يساوي 1.');if(!p.translations||typeof p.translations!=='object'||Array.isArray(p.translations))throw new Error('الحقل translations غير موجود أو غير صالح.');const texts=S.getTextElements(),ids=texts.map(x=>x.translationKey);if(!texts.length)throw new Error('لا توجد عناصر نصية في التصميم.');if(new Set(ids).size!==ids.length)throw new Error('هناك معرّفات ترجمة مكررة.');const req=L.selected(),av=Object.keys(p.translations),missing=req.filter(c=>!av.includes(c));if(missing.length)throw new Error(`لغات ناقصة: ${missing.join(', ')}`);req.forEach(lang=>{const map=p.translations[lang];if(!map||typeof map!=='object'||Array.isArray(map))throw new Error(`بنية اللغة ${lang} غير صالحة.`);const miss=ids.filter(id=>typeof map[id]!=='string');if(miss.length)throw new Error(`اللغة ${lang} لا تحتوي: ${miss.join(', ')}`);});return req;};
+
+  L.captureBase=()=>{
+    L.base=S.getTextElements().map(el=>{
+      S.ensureElementTransform(el);
+      return{id:el.id,key:el.translationKey,content:el.content,fontSize:el.fontSize,scale:el.scale,scaleX:el.scaleX,scaleY:el.scaleY,aspectLocked:el.aspectLocked,x:el.x,y:el.y,rotation:el.rotation};
+    });
+  };
+
+  L.restoreBase=(render=true)=>{
+    if(!L.base)return;
+    L.base.forEach(b=>{const el=S.state.elements.find(x=>x.id===b.id&&x.type==='text');if(!el)return;Object.assign(el,{content:b.content,fontSize:b.fontSize,scale:b.scale,scaleX:b.scaleX,scaleY:b.scaleY,aspectLocked:b.aspectLocked,x:b.x,y:b.y,rotation:b.rotation});S.ensureElementTransform(el);});
+    if(render){S.render();S.syncAllUI();}
+  };
+
+  L.validate=p=>{
+    if(!p||typeof p!=='object')throw new Error('JSON غير صالح.');
+    if(p.schema_version!==1)throw new Error('schema_version يجب أن يساوي 1.');
+    if(!p.translations||typeof p.translations!=='object'||Array.isArray(p.translations))throw new Error('الحقل translations غير موجود أو غير صالح.');
+    const texts=S.getTextElements(),ids=texts.map(x=>x.translationKey);if(!texts.length)throw new Error('لا توجد عناصر نصية في التصميم.');if(new Set(ids).size!==ids.length)throw new Error('هناك معرّفات ترجمة مكررة.');
+    const req=L.selected(),av=Object.keys(p.translations),missing=req.filter(c=>!av.includes(c));if(missing.length)throw new Error(`لغات ناقصة: ${missing.join(', ')}`);
+    req.forEach(lang=>{const map=p.translations[lang];if(!map||typeof map!=='object'||Array.isArray(map))throw new Error(`بنية اللغة ${lang} غير صالحة.`);const miss=ids.filter(id=>typeof map[id]!=='string');if(miss.length)throw new Error(`اللغة ${lang} لا تحتوي: ${miss.join(', ')}`);});
+    return req;
+  };
+
   L.populate=langs=>{const s=document.getElementById('previewLanguage');s.innerHTML='<option value="">معاينة لغة…</option>';langs.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=`${L.name(c)} (${c})`;s.appendChild(o);});s.disabled=!langs.length;document.getElementById('applyPreviewLanguage').disabled=!langs.length;document.getElementById('exportTranslationsBtn').disabled=!langs.length;};
-  L.apply=(code,render=true)=>{if(!L.parsed||!L.base||!L.parsed[code])return false;const map=L.parsed[code];L.base.forEach(b=>{const el=S.state.elements.find(x=>x.id===b.id&&x.type==='text');if(!el)return;Object.assign(el,{content:b.content,fontSize:b.fontSize,scale:b.scale,x:b.x,y:b.y,rotation:b.rotation});el.content=map[b.key]??b.content;if(el.autoFit!==false)S.fitTextElementToCanvas(el,{startFontSize:b.fontSize});});if(render){S.render();S.syncAllUI();}return true;};
+
+  L.apply=(code,render=true)=>{
+    if(!L.parsed||!L.base||!L.parsed[code])return false;
+    const map=L.parsed[code];
+    L.base.forEach(b=>{const el=S.state.elements.find(x=>x.id===b.id&&x.type==='text');if(!el)return;Object.assign(el,{content:b.content,fontSize:b.fontSize,scale:b.scale,scaleX:b.scaleX,scaleY:b.scaleY,aspectLocked:b.aspectLocked,x:b.x,y:b.y,rotation:b.rotation});S.ensureElementTransform(el);el.content=map[b.key]??b.content;if(el.autoFit!==false)S.fitTextElementToCanvas(el,{startFontSize:b.fontSize});});
+    if(render){S.render();S.syncAllUI();}
+    return true;
+  };
+
   L.buildLanguages();L.refreshTextItems();
 })();
