@@ -11,3 +11,10 @@
   document.getElementById('restoreSourceText').onclick=()=>{if(!L.base){S.showToast('افحص JSON أولًا لإنشاء حالة النص الأصلية.');return;}L.restoreBase();S.showToast('تمت إعادة النصوص والأحجام الأصلية.');};
   document.getElementById('exportTranslationsBtn').onclick=exportZip;
 })();
+
+(() => {
+  const script=document.createElement('script');
+  script.src='transform-enhancements.js?v=20260814-1';
+  script.defer=true;
+  document.body.appendChild(script);
+})();
