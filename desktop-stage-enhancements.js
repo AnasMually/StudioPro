@@ -125,7 +125,6 @@
       availableHeight / S.canvas.height
     );
 
-    // Desktop editors normally leave a little breathing room around the artboard.
     const breathingRoom = desktop ? 0.94 : 1;
     const zoom = Math.max(30, Math.min(300, Number(S.viewState.zoom) || 100));
     const scale = Math.max(0.02, fitScale * breathingRoom * (zoom / 100));
@@ -146,7 +145,6 @@
   bar.querySelector('.desktop-zoom-in').addEventListener('click', () => setZoom(S.viewState.zoom + 10));
   bar.querySelector('.desktop-fit-btn').addEventListener('click', () => setZoom(100));
 
-  // Re-fit after fonts/layout settle so the first view never opens oversized.
   const initialFit = () => {
     if (window.innerWidth > 780) S.viewState.zoom = 100;
     S.fitCanvasToStage();
@@ -154,4 +152,12 @@
   requestAnimationFrame(() => requestAnimationFrame(initialFit));
   window.addEventListener('load', initialFit, { once: true });
   window.visualViewport?.addEventListener('resize', S.fitCanvasToStage);
+})();
+
+(() => {
+  if (document.querySelector('script[data-site-preferences]')) return;
+  const script = document.createElement('script');
+  script.src = 'site-preferences.js?v=20260815-1';
+  script.dataset.sitePreferences = '1';
+  document.body.appendChild(script);
 })();
