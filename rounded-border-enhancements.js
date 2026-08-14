@@ -102,3 +102,9 @@
   S.syncInspectorUI?.();
   S.render();
 })();
+
+(() => {
+  const script=document.createElement('script');
+  script.src='desktop-stage-enhancements.js?v=20260815-1';
+  document.body.appendChild(script);
+})();
