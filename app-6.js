@@ -13,8 +13,12 @@
 })();
 
 (() => {
-  const script=document.createElement('script');
-  script.src='transform-enhancements.js?v=20260814-1';
-  script.defer=true;
-  document.body.appendChild(script);
+  const transform=document.createElement('script');
+  transform.src='transform-enhancements.js?v=20260814-2';
+  transform.onload=()=>{
+    const properties=document.createElement('script');
+    properties.src='property-enhancements.js?v=20260814-1';
+    document.body.appendChild(properties);
+  };
+  document.body.appendChild(transform);
 })();
