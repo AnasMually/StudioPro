@@ -1,243 +1,68 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>استوديو موك آب الشاشات الاحترافي</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f8fb">
+  <title>StudioPro — App Screenshot Studio</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
-    <!-- Top Header -->
-    <header>
-        <div class="brand">🎨 Studio<span style="color:var(--text-muted)">Pro</span></div>
-        <div class="header-actions">
-            <!-- Global History Controls -->
-            <button class="btn" id="undoBtn" title="تراجع (Ctrl+Z)" disabled>↶</button>
-            <button class="btn" id="redoBtn" title="إعادة (Ctrl+Shift+Z)" disabled>↷</button>
-            <button class="btn btn-danger" id="deleteBtn">🗑️ حذف العنصر</button>
-            <button class="btn btn-primary" id="exportBtn">💾 تصدير الصورة</button>
-        </div>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand-wrap"><div class="brand-mark">S</div><div><div class="brand">StudioPro</div><div class="brand-sub">App Screenshot Studio</div></div></div>
+      <div class="top-actions"><button class="icon-btn" id="undoBtn" title="تراجع" disabled>↶</button><button class="icon-btn" id="redoBtn" title="إعادة" disabled>↷</button><button class="btn btn-primary" id="exportBtn">تصدير PNG</button></div>
     </header>
-
-    <div class="app-layout">
-        <!-- LEFT SIDEBAR: Creation & Assets -->
-        <aside class="sidebar sidebar-left">
-
-            <!-- Add Elements -->
-            <div class="panel-section">
-                <div class="section-header">إضافة محتوى</div>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="document.getElementById('imageInput').click()"
-                        style="flex:2">
-                        <span>🖼️ صورة </span>
-                    </button>
-                    <button class="btn" id="addTextBtn"><span>📝 نص</span></button>
-                </div>
-                <!-- Hidden inputs -->
-                <input type="file" id="imageInput" accept="image/*" multiple>
-            </div>
-
-            <!-- Aspect Ratio -->
-            <div class="panel-section">
-                <div class="section-header">أبعاد التصميم</div>
-                <div class="aspect-grid">
-                    <div class="aspect-option active aspect-btn" data-aspect="portrait">
-                        <span>📱</span> <small>Story ID (9:16)</small>
-                    </div>
-                    <div class="aspect-option aspect-btn" data-aspect="landscape">
-                        <span>💻</span> <small>Post HD (16:9)</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Backgrounds -->
-            <div class="panel-section">
-                <div class="section-header">
-                    <span>الخلفية</span>
-                    <select id="bgType" style="width: 110px; padding: 0.2rem; font-size: 0.8rem;">
-                        <option value="gradient">احترافية</option>
-                        <option value="simple">تدرجات</option>
-                        <option value="solid">لون</option>
-                        <option value="image">صورة</option>
-                    </select>
-                </div>
-
-                <!-- Dynamic BG Content -->
-                <!-- Dynamic BG Content -->
-                <div id="gradientSection">
-                    <button class="btn" id="randomBg" style="width:100%; margin-bottom:0.8rem">🎲 خلط عشوائي</button>
-                    <div class="grid-3" id="bgGallery"></div> <!-- Removed max-height/overflow for new layout -->
-                    <div class="pagination-controls"
-                        style="display:flex; justify-content:space-between; margin-top:0.5rem">
-                        <button class="btn btn-sm" id="bgPrevBtn" style="width:auto">❮ السابق</button>
-                        <span id="bgPageIndicator"
-                            style="font-size:0.8rem; align-self:center; color:var(--text-muted)">1 / 1</span>
-                        <button class="btn btn-sm" id="bgNextBtn" style="width:auto">التالي ❯</button>
-                    </div>
-                </div>
-
-                <div id="simpleSection" style="display:none;">
-                    <div class="grid-3" id="simpleGallery"></div>
-                    <div class="pagination-controls"
-                        style="display:flex; justify-content:space-between; margin-top:0.5rem">
-                        <button class="btn btn-sm" id="simplePrevBtn" style="width:auto">❮ السابق</button>
-                        <span id="simplePageIndicator"
-                            style="font-size:0.8rem; align-self:center; color:var(--text-muted)">1 / 1</span>
-                        <button class="btn btn-sm" id="simpleNextBtn" style="width:auto">التالي ❯</button>
-                    </div>
-                </div>
-
-                <div id="solidSection" style="display:none;">
-                    <input type="color" id="solidColor" value="#6366f1">
-                </div>
-
-                <div id="imageSection" style="display:none;">
-                    <button class="btn" onclick="document.getElementById('bgImageInput').click()"
-                        style="width:100%; height:100px; border-style: dashed;">
-                        📁 رفع خلفية
-                    </button>
-                    <input type="file" id="bgImageInput" accept="image/*">
-                </div>
-            </div>
-
-            <!-- Batch Export -->
-            <div class="panel-section" style="margin-top: auto;">
-                <div class="section-header">التصدير الجماعي (JSON)</div>
-                <button class="btn" id="generateAllBtn" style="font-size:0.8rem">⚡ توليد الملفات (ZIP)</button>
-                <textarea id="jsonInput" placeholder='{"key": "text"}'
-                    style="min-height: 100px; padding:0.5rem; margin-top:0.5rem; font-family:monospace; font-size:0.8rem; border:1px solid var(--border-color); background:rgba(0,0,0,0.2); color:var(--text-muted); border-radius:6px; resize:vertical;"></textarea>
-                <!-- Kept hidden/minimized for clean UI unless needed, or we can make a modal for it? Kept as is for function compatibility -->
-            </div>
-        </aside>
-
-        <!-- CENTER: Canvas Stage -->
-        <main class="main-stage" id="canvasArea">
-            <div class="floating-hint">
-                <span style="opacity:0.7">الاختصارات:</span><br>
-                Ctrl+Z / +Shift+Z : تراجع / إعادة<br>
-                Drag : تحريك العنصر<br>
-                Shift+Drag : تدوير<br>
-                Alt+↑/↓ : تغيير الحجم<br>
-                Shift+Arrows : تحريك سريع<br>
-                Delete : حذف العنصر<br>
-                Esc : إخفاء التحديد
-            </div>
-
-            <canvas id="mainCanvas"></canvas>
-
-            <div class="floating-controls">
-                <div class="zoom-group">
-                    <button class="btn" id="zoomOut" style="width:32px; padding:0">-</button>
-                    <span class="zoom-val" id="zoomDisplay">25%</span>
-                    <button class="btn" id="zoomIn" style="width:32px; padding:0">+</button>
-                </div>
-                <div style="width:1px; height:20px; background:rgba(255,255,255,0.2)"></div>
-                <button class="btn" id="zoomReset" style="font-size:0.8rem">احتواء</button>
-            </div>
-
-            <!-- Hidden inputs needed for logic -->
-            <input type="number" id="zoomInput" value="25" min="1" max="300" step="5" style="display:none">
-        </main>
-
-        <!-- RIGHT SIDEBAR: Properties -->
-        <aside class="sidebar sidebar-right">
-
-            <!-- Layers -->
-            <div class="panel-section">
-                <div class="section-header">الطبقات / العناصر</div>
-                <div class="elements-list" id="elementsList" style="max-height: 150px; overflow-y: auto;">
-                    <!-- JS fills this -->
-                </div>
-            </div>
-
-            <div style="width: 100%; height: 1px; background: var(--border-color); margin: 0.5rem 0;"></div>
-
-            <!-- Properties (Dynamic based on selection) -->
-            <div class="panel-section">
-                <div class="section-header">خصائص العنصر المحدد</div>
-
-                <!-- Text-only Trigger (Logic uses modal, but we can put Edit btn here) -->
-                <button class="btn btn-secondary" id="textModalBtn" style="display:none;">✏️ تعديل النص</button>
-
-                <!-- Frame Settings (Always visible but effective only on Image) -->
-                <label style="font-size:0.8rem; margin-top:0.5rem">شكل الإطار</label>
-                <div class="grid-2" id="deviceGrid">
-                    <!-- JS fills this -->
-                </div>
-
-                <label style="font-size:0.8rem; margin-top:0.8rem">لون الإطار</label>
-                <div class="color-palette">
-                    <div class="color-dot" data-color="#000000" style="background:#000000;"></div>
-                    <div class="color-dot" data-color="#1a1a1a" style="background:#1a1a1a;"></div>
-                    <div class="color-dot" data-color="#374151" style="background:#374151;"></div>
-                    <div class="color-dot" data-color="#9ca3af" style="background:#9ca3af;"></div>
-                    <div class="color-dot" data-color="#ffffff" style="background:#ffffff;"></div>
-                    <div class="color-dot" data-color="#ef4444" style="background:#ef4444;"></div>
-                    <div class="color-dot" data-color="#f59e0b" style="background:#f59e0b;"></div>
-                    <div class="color-dot" data-color="#10b981" style="background:#10b981;"></div>
-                    <div class="color-dot" data-color="#3b82f6" style="background:#3b82f6;"></div>
-                    <div class="color-dot" data-color="#8b5cf6" style="background:#8b5cf6;"></div>
-                    <div class="color-dot" data-color="#ec4899" style="background:#ec4899;"></div>
-                    <div class="color-dot" data-color="#f43f5e" style="background:#f43f5e;"></div>
-                </div>
-                <input type="color" id="frameColorPicker" value="#1a1a1a" style="margin-top:0.5rem; height: 30px;">
-
-                <label style="font-size:0.8rem; margin-top:1rem; display:flex; justify-content:space-between;">
-                    <span>تدوير الزوايا</span>
-                    <span id="borderRadiusValue" style="color:var(--accent)">10</span>
-                </label>
-                <input type="range" id="borderRadiusSlider" min="0" max="80" value="10">
-
-                <label style="font-size:0.8rem; margin-top:0.8rem; display:flex; justify-content:space-between;">
-                    <span>عمق الظل (Shadow)</span>
-                    <span id="shadowValue" style="color:var(--accent)">0</span>
-                </label>
-                <input type="range" id="shadowSlider" min="0" max="100" value="0">
-            </div>
-
-            <div id="activeIndicator" style="display:none"></div> <!-- Logic Hook -->
-        </aside>
-    </div>
-
-    <!-- Modals -->
-    <div class="modal" id="textModal">
-        <div class="modal-box">
-            <div class="section-header" style="margin-bottom:1rem; font-size:1.1rem">
-                تعديل النص
-                <button class="close-btn" id="closeTextModal" style="color:white;cursor:pointer;">×</button>
-            </div>
-            <div class="panel-section">
-                <textarea id="textContent" placeholder="اكتب النص هنا..."
-                    style="min-height:100px; font-size:1.1rem"></textarea>
-
-                <button class="btn" id="copyAiPromptBtn" style="font-size:0.8rem; background:rgba(255,255,255,0.05)">🤖
-                    نسخ برومبت الترجمة (AI)</button>
-
-                <label>الحجم: <span id="fontSizeValue">48</span>px</label>
-                <input type="range" id="fontSize" min="20" max="200" value="48">
-
-                <label>اللون</label>
-                <input type="color" id="textColor" value="#ffffff">
-
-                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer">
-                    <input type="checkbox" id="textShadow" checked style="width:auto">
-                    تفعيل ظل النص
-                </label>
-
-                <button class="btn btn-primary" id="confirmTextBtn" style="margin-top:1rem; width:100%">✅ تأكيد</button>
-            </div>
+    <div class="workspace-grid">
+      <aside class="panel left-panel" id="leftPanel">
+        <div class="panel-head mobile-only"><strong id="mobilePanelTitle">التصميم</strong><button class="icon-btn" id="closeMobilePanel">×</button></div>
+        <div class="panel-tabs desktop-only" role="tablist"><button class="panel-tab active" data-panel="design">التصميم</button><button class="panel-tab" data-panel="background">الخلفية</button><button class="panel-tab" data-panel="elements">العناصر</button><button class="panel-tab" data-panel="localization">الترجمة</button></div>
+        <section class="tool-section active" data-section="design">
+          <div class="section-title">المحتوى</div>
+          <div class="action-grid"><button class="action-card primary" id="addImageBtn"><span class="action-icon">＋</span><span>إضافة صورة</span></button><button class="action-card" id="addTextBtn"><span class="action-icon">T</span><span>إضافة نص</span></button></div>
+          <input type="file" id="imageInput" accept="image/*" multiple hidden>
+          <div class="section-title">مقاس التصميم</div>
+          <div class="preset-list"><button class="preset-btn active" data-size="1080x1920"><span>عمودي 9:16</span><small>1080×1920</small></button><button class="preset-btn" data-size="1920x1080"><span>أفقي 16:9</span><small>1920×1080</small></button><button class="preset-btn" data-size="1080x1080"><span>مربع 1:1</span><small>1080×1080</small></button></div>
+          <details class="advanced-block"><summary>مقاس مخصص</summary><div class="field-row two"><label>العرض<input type="number" id="customWidth" value="1080" min="320" max="7680"></label><label>الارتفاع<input type="number" id="customHeight" value="1920" min="320" max="7680"></label></div><button class="btn btn-secondary full" id="applyCustomSize">تطبيق المقاس</button></details>
+          <div class="section-title">عرض مساحة العمل</div><div class="zoom-row"><button class="icon-btn" id="zoomOut">−</button><span id="zoomDisplay">100%</span><button class="icon-btn" id="zoomIn">＋</button><button class="btn btn-ghost" id="zoomReset">احتواء</button></div>
+        </section>
+        <section class="tool-section" data-section="background">
+          <div class="section-title-row"><div><div class="section-title no-margin">خلفيات احترافية</div><div class="section-help">ألوان فاتحة وتدرجات مناسبة لصور المتاجر</div></div><button class="btn btn-secondary compact" id="smartBgBtn">من الصورة</button></div>
+          <div class="background-grid" id="bgGallery"></div>
+          <div class="section-title">لون مخصص</div><div class="color-field"><input type="color" id="solidColor" value="#f3f4f8"><input type="text" id="solidHex" value="#F3F4F8" maxlength="7"></div>
+          <div class="section-title">صورة كخلفية</div><button class="upload-zone" id="bgImageBtn">اختر صورة خلفية</button><input type="file" id="bgImageInput" accept="image/*" hidden><div class="field-row two compact-fields"><label>تمويه<input type="range" id="bgBlur" min="0" max="40" value="0"></label><label>تعتيم<input type="range" id="bgOverlay" min="0" max="70" value="0"></label></div>
+        </section>
+        <section class="tool-section" data-section="elements"><div class="section-title-row"><div><div class="section-title no-margin">العناصر</div><div class="section-help">اضغط على أي عنصر لتعديله</div></div><button class="icon-btn danger" id="deleteBtn" title="حذف العنصر">⌫</button></div><div class="elements-list" id="elementsList"></div></section>
+        <section class="tool-section" data-section="localization">
+          <div class="section-title">الترجمة والتصدير المحلي</div><p class="section-help prominent">يدعم عدة نصوص مستقلة. كل نص يحصل على معرّف ثابت، ويُعاد حجمه تلقائيًا لكل لغة دون أن يخرج عن حدود التصميم.</p>
+          <div class="localization-card"><div class="card-label">النصوص الموجودة</div><div id="translationItems" class="translation-items"></div></div>
+          <details class="advanced-block" open><summary>لغات الترجمة</summary><div class="language-toolbar"><button class="text-btn" id="selectAllLanguages">تحديد الكل</button><button class="text-btn" id="clearLanguages">إلغاء الكل</button></div><div class="language-grid" id="languageGrid"></div></details>
+          <button class="btn btn-primary full" id="copyLocalizationPrompt">نسخ تعليمات الترجمة</button><div class="copy-status" id="copyStatus" aria-live="polite"></div>
+          <label class="field-label" for="translationJson">ألصق JSON الناتج من الذكاء الاصطناعي</label><textarea id="translationJson" class="code-area" spellcheck="false" placeholder='{"schema_version":1,"translations":{"en":{"text_1":"..."}}}'></textarea>
+          <div class="button-row"><button class="btn btn-secondary" id="validateTranslations">فحص الترجمة</button><button class="btn btn-secondary" id="restoreSourceText">إعادة الأصل</button></div><div class="validation-status" id="translationStatus"></div>
+          <div class="preview-language-row"><select id="previewLanguage" disabled><option value="">معاينة لغة…</option></select><button class="btn btn-secondary" id="applyPreviewLanguage" disabled>تطبيق</button></div><button class="btn btn-primary full" id="exportTranslationsBtn" disabled>تصدير كل اللغات ZIP</button>
+        </section>
+      </aside>
+      <main class="stage-column"><div class="stage-toolbar"><div class="stage-status"><span class="status-dot"></span><span id="canvasSizeLabel">1080 × 1920</span></div><div class="stage-actions"><button class="mini-btn" id="centerElementBtn">توسيط</button><button class="mini-btn" id="fitElementBtn">ملاءمة</button></div></div><div class="stage" id="canvasArea"><canvas id="mainCanvas" width="1080" height="1920"></canvas><div class="empty-state" id="emptyState"><strong>ابدأ بإضافة لقطة شاشة</strong><span>يمكنك إضافة صورة أو نص ثم اختيار خلفية مناسبة.</span><button class="btn btn-primary" id="emptyAddImage">إضافة صورة</button></div></div></main>
+      <aside class="panel inspector-panel" id="inspectorPanel">
+        <div class="panel-head mobile-only"><strong>خصائص العنصر</strong><button class="icon-btn" id="closeInspectorPanel">×</button></div>
+        <div class="inspector-empty" id="inspectorEmpty"><div class="empty-icon">◇</div><strong>لا يوجد عنصر محدد</strong><span>اختر صورة أو نصًا من مساحة العمل لتعديل خصائصه.</span></div>
+        <div class="inspector-content" id="inspectorContent" hidden>
+          <div class="inspector-title-row"><div><div class="eyebrow" id="activeElementType">عنصر</div><strong id="activeElementName">العنصر المحدد</strong></div><button class="icon-btn danger" id="deleteInspectorBtn">⌫</button></div>
+          <div class="inspector-group" id="textInspector" hidden><label class="field-label">النص</label><textarea id="textContent" rows="3"></textarea><div class="field-row two"><label>الحجم<input type="number" id="fontSize" min="12" max="260" step="1"></label><label>اللون<input type="color" id="textColor"></label></div><label class="switch-row"><span>احتواء تلقائي داخل التصميم</span><input type="checkbox" id="textAutoFit" checked></label><label class="field-label">معرّف الترجمة</label><input type="text" id="translationKey" placeholder="text_1"></div>
+          <div class="inspector-group" id="imageInspector" hidden><label class="field-label">الإطار</label><div class="segmented" id="deviceGrid"><button data-frame="none" class="active">بدون</button><button data-frame="rounded">ناعم</button><button data-frame="iphone">iPhone</button><button data-frame="samsung">Samsung</button></div><div class="field-row two"><label>تدوير الزوايا<input type="range" id="borderRadiusSlider" min="0" max="100"></label><label>لون الإطار<input type="color" id="frameColorPicker"></label></div></div>
+          <div class="inspector-group"><div class="group-title">الموضع والحجم</div><div class="field-row two"><label>الحجم<input type="range" id="elementScale" min="10" max="300" value="100"></label><label>الدوران<input type="range" id="elementRotation" min="-180" max="180" value="0"></label></div><div class="button-row"><button class="btn btn-secondary" id="centerXBtn">توسيط أفقي</button><button class="btn btn-secondary" id="centerYBtn">توسيط عمودي</button></div></div>
+          <div class="inspector-group shadow-group"><div class="group-title-row"><div><div class="group-title no-margin">الظل</div><div class="section-help">يتبع شفافية وحواف الصورة تلقائيًا.</div></div><label class="switch"><input type="checkbox" id="shadowEnabled"><span></span></label></div><div id="shadowControls"><div class="field-row two"><label>النعومة<input type="range" id="shadowBlur" min="0" max="120"></label><label>الشفافية<input type="range" id="shadowOpacity" min="0" max="100"></label></div><div class="field-row two"><label>أفقي<input type="range" id="shadowX" min="-80" max="80"></label><label>عمودي<input type="range" id="shadowY" min="-80" max="120"></label></div><label class="field-label">لون الظل</label><input type="color" id="shadowColor" value="#111827"></div></div>
         </div>
+      </aside>
     </div>
-    <script src="app-1.js"></script>
-    <script src="app-2.js"></script>
-    <script src="app-3.js"></script>
-    <script src="app-4.js"></script>
-    <script src="app-5.js"></script>
-    <script src="app-6.js"></script>
+    <nav class="mobile-dock mobile-only" aria-label="أدوات المحرر"><button class="mobile-tool active" data-mobile-panel="design"><span>＋</span><small>تصميم</small></button><button class="mobile-tool" data-mobile-panel="background"><span>◐</span><small>خلفية</small></button><button class="mobile-tool" data-mobile-panel="elements"><span>▱</span><small>عناصر</small></button><button class="mobile-tool" data-mobile-panel="localization"><span>文</span><small>ترجمة</small></button><button class="mobile-tool" data-mobile-panel="inspector"><span>☷</span><small>خصائص</small></button></nav>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+  <script src="app-1.js"></script><script src="app-2.js"></script><script src="app-3.js"></script><script src="app-4.js"></script><script src="app-5.js"></script><script src="app-6.js"></script>
 </body>
-
 </html>
