@@ -1,12 +1,15 @@
 (() => {
   'use strict';
-  const canvas=document.getElementById('mainCanvas');
-  const ctx=canvas.getContext('2d',{alpha:false});
-  const canvasArea=document.getElementById('canvasArea');
-  const languages=[
+
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const canvasArea = document.getElementById('canvasArea');
+
+  const languages = [
     ['en','English'],['ja','Japanese'],['ko','Korean'],['de','German'],['fr','French'],['zh-CN','Chinese Simplified'],['zh-TW','Chinese Traditional'],['es','Spanish'],['it','Italian'],['nl','Dutch'],['sv','Swedish'],['no','Norwegian'],['da','Danish'],['fi','Finnish'],['pl','Polish'],['cs','Czech'],['sk','Slovak'],['ro','Romanian'],['hu','Hungarian'],['uk','Ukrainian'],['pt','Portuguese'],['ru','Russian'],['tr','Turkish'],['ar','Arabic'],['he','Hebrew'],['id','Indonesian'],['ms','Malay'],['vi','Vietnamese'],['th','Thai'],['hi','Hindi']
   ];
-  const backgroundPresets=[
+
+  const backgroundPresets = [
     {id:'cloud',name:'Cloud',colors:['#ffffff','#f1f5ff','#eef1ff'],angle:135,spots:[['#c7d2fe',.22,.18,.20],['#e9d5ff',.22,.82,.76]]},
     {id:'blush',name:'Blush',colors:['#fff8fb','#ffe9f3','#f4edff'],angle:145,spots:[['#f9a8d4',.20,.82,.18],['#ddd6fe',.22,.18,.82]]},
     {id:'lavender',name:'Lavender',colors:['#fbf9ff','#ede9fe','#e0e7ff'],angle:130,spots:[['#c4b5fd',.24,.20,.20],['#a5b4fc',.20,.80,.78]]},
@@ -32,24 +35,105 @@
     {id:'brand-purple',name:'Purple',colors:['#faf5ff','#e9d5ff','#fce7f3'],angle:135,spots:[['#a855f7',.17,.18,.22],['#ec4899',.16,.82,.78]]},
     {id:'clean-white',name:'Clean',colors:['#ffffff','#f8fafc','#f1f5f9'],angle:135,spots:[]}
   ];
-  const state={canvas:{width:1080,height:1920},background:{type:'preset',presetId:'cloud',colors:null,solid:'#f3f4f8',image:null,blur:0,overlay:0},elements:[],activeElementId:null};
-  const viewState={zoom:100,showSelection:true};
-  const history={states:[],index:-1,max:60,restoring:false};
-  let counter=0,timer=null;
-  const S=window.StudioPro={canvas,ctx,canvasArea,languages,backgroundPresets,state,viewState,history};
-  S.uid=(p='el')=>`${p}_${Date.now().toString(36)}_${++counter}`;
-  S.getActiveElement=()=>state.elements.find(x=>x.id===state.activeElementId)||null;
-  S.getTextElements=()=>state.elements.filter(x=>x.type==='text');
-  S.uniqueTranslationKey=()=>{const used=new Set(S.getTextElements().map(x=>x.translationKey));let i=1;while(used.has(`text_${i}`))i++;return`text_${i}`;};
-  S.makeShadow=t=>t==='text'?{enabled:true,blur:16,opacity:34,x:0,y:8,color:'#111827'}:{enabled:true,blur:44,opacity:28,x:0,y:28,color:'#111827'};
-  S.cloneState=()=>({canvas:{...state.canvas},background:{...state.background},elements:state.elements.map(x=>({...x,shadow:{...x.shadow}})),activeElementId:state.activeElementId});
-  S.updateUndoRedo=()=>{const u=document.getElementById('undoBtn'),r=document.getElementById('redoBtn');if(u)u.disabled=history.index<=0;if(r)r.disabled=history.index>=history.states.length-1;};
-  S.saveState=()=>{if(history.restoring)return;if(history.index<history.states.length-1)history.states=history.states.slice(0,history.index+1);history.states.push(S.cloneState());if(history.states.length>history.max)history.states.shift();else history.index++;S.updateUndoRedo();};
-  S.restoreState=s=>{if(!s)return;history.restoring=true;state.canvas={...s.canvas};state.background={...s.background};state.elements=s.elements.map(x=>({...x,shadow:{...x.shadow}}));state.activeElementId=s.activeElementId;canvas.width=state.canvas.width;canvas.height=state.canvas.height;history.restoring=false;S.render();S.fitCanvasToStage();S.syncAllUI();};
-  S.undo=()=>{if(history.index<=0)return;history.index--;S.restoreState(history.states[history.index]);S.updateUndoRedo();};
-  S.redo=()=>{if(history.index>=history.states.length-1)return;history.index++;S.restoreState(history.states[history.index]);S.updateUndoRedo();};
-  S.showToast=m=>{const t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(timer);timer=setTimeout(()=>t.classList.remove('show'),2200);};
-  S.hexToRgb=h=>{let v=String(h||'#000000').replace('#','');if(v.length===3)v=v.split('').map(c=>c+c).join('');const n=parseInt(v.padEnd(6,'0').slice(0,6),16);return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};};
-  S.rgba=(h,o)=>{const{r,g,b}=S.hexToRgb(h);return`rgba(${r},${g},${b},${Math.max(0,Math.min(100,o))/100})`;};
-  S.detectDirection=t=>/[\u0590-\u08FF]/.test(t||'')?'rtl':'ltr';
+
+  const deviceFrames = [
+    {id:'none',name:'بدون إطار',short:'بدون',kind:'none',radius:0,bezel:0,cutout:'none'},
+    {id:'rounded',name:'إطار ناعم',short:'ناعم',kind:'rounded',radius:46,bezel:4,cutout:'none'},
+    {id:'iphone17pro',name:'iPhone 17 Pro',short:'17 Pro',kind:'phone',radius:54,bezel:10,cutout:'island'},
+    {id:'iphone17promax',name:'iPhone 17 Pro Max',short:'17 Pro Max',kind:'phone',radius:56,bezel:10,cutout:'island'},
+    {id:'s26ultra',name:'Galaxy S26 Ultra',short:'S26 Ultra',kind:'phone',radius:24,bezel:8,cutout:'hole'},
+    {id:'pixel10pro',name:'Pixel 10 Pro',short:'Pixel 10 Pro',kind:'phone',radius:48,bezel:9,cutout:'hole'},
+    {id:'pixel10proxl',name:'Pixel 10 Pro XL',short:'Pixel 10 XL',kind:'phone',radius:50,bezel:9,cutout:'hole'},
+    {id:'fold8',name:'Galaxy Z Fold8',short:'Z Fold8',kind:'fold',radius:28,bezel:8,cutout:'hole',crease:true},
+    {id:'flip8',name:'Galaxy Z Flip8',short:'Z Flip8',kind:'phone',radius:44,bezel:8,cutout:'hole'}
+  ];
+
+  const state = {
+    canvas:{width:1080,height:1920},
+    background:{type:'preset',presetId:'cloud',colors:null,solid:'#f3f4f8',image:null,blur:0,overlay:0},
+    elements:[],
+    activeElementId:null
+  };
+  const viewState = { zoom:100, showSelection:true };
+  const history = { states:[], index:-1, max:60, restoring:false };
+  let counter = 0, timer = null;
+
+  const S = window.StudioPro = { canvas, ctx, canvasArea, languages, backgroundPresets, deviceFrames, state, viewState, history };
+
+  S.uid = (p='el') => `${p}_${Date.now().toString(36)}_${++counter}`;
+  S.getActiveElement = () => state.elements.find(x => x.id === state.activeElementId) || null;
+  S.getTextElements = () => state.elements.filter(x => x.type === 'text');
+  S.uniqueTranslationKey = () => { const used = new Set(S.getTextElements().map(x => x.translationKey)); let i=1; while(used.has(`text_${i}`)) i++; return `text_${i}`; };
+  S.makeShadow = t => t === 'text' ? {enabled:true,blur:16,opacity:34,x:0,y:8,color:'#111827'} : {enabled:true,blur:44,opacity:28,x:0,y:28,color:'#111827'};
+
+  S.ensureElementTransform = el => {
+    if (!el) return el;
+    const legacy = Number.isFinite(el.scale) ? el.scale : 1;
+    if (!Number.isFinite(el.scaleX)) el.scaleX = legacy;
+    if (!Number.isFinite(el.scaleY)) el.scaleY = legacy;
+    if (typeof el.aspectLocked !== 'boolean') el.aspectLocked = true;
+    el.scaleX = Math.max(.05, Math.min(12, el.scaleX));
+    el.scaleY = Math.max(.05, Math.min(12, el.scaleY));
+    el.scale = Math.sqrt(el.scaleX * el.scaleY);
+    return el;
+  };
+
+  S.getScales = el => { S.ensureElementTransform(el); return { x:el.scaleX, y:el.scaleY }; };
+  S.getUniformScale = el => { const {x,y}=S.getScales(el); return Math.sqrt(x*y); };
+  S.setScales = (el, sx, sy=sx) => {
+    if (!el) return;
+    el.scaleX = Math.max(.05, Math.min(12, Number(sx) || .05));
+    el.scaleY = Math.max(.05, Math.min(12, Number(sy) || .05));
+    el.scale = Math.sqrt(el.scaleX * el.scaleY);
+  };
+  S.scaleElementByFactor = (el, factor, start=null) => {
+    if (!el) return;
+    const base = start || S.getScales(el);
+    S.setScales(el, base.x * factor, base.y * factor);
+  };
+
+  S.getFrameDefinition = id => {
+    const legacy = { iphone:'iphone17pro', samsung:'s26ultra' }[id] || id || 'none';
+    return deviceFrames.find(x => x.id === legacy) || deviceFrames[0];
+  };
+
+  S.cloneState = () => ({
+    canvas:{...state.canvas},
+    background:{...state.background},
+    elements:state.elements.map(x => { S.ensureElementTransform(x); return {...x, shadow:{...x.shadow}}; }),
+    activeElementId:state.activeElementId
+  });
+
+  S.updateUndoRedo = () => {
+    const u=document.getElementById('undoBtn'), r=document.getElementById('redoBtn');
+    if(u) u.disabled = history.index <= 0;
+    if(r) r.disabled = history.index >= history.states.length - 1;
+  };
+  S.saveState = () => {
+    if(history.restoring) return;
+    if(history.index < history.states.length - 1) history.states = history.states.slice(0, history.index + 1);
+    history.states.push(S.cloneState());
+    if(history.states.length > history.max) history.states.shift(); else history.index++;
+    S.updateUndoRedo();
+  };
+  S.restoreState = s => {
+    if(!s) return;
+    history.restoring = true;
+    state.canvas = {...s.canvas};
+    state.background = {...s.background};
+    state.elements = s.elements.map(x => S.ensureElementTransform({...x,shadow:{...x.shadow}}));
+    state.activeElementId = s.activeElementId;
+    canvas.width = state.canvas.width;
+    canvas.height = state.canvas.height;
+    history.restoring = false;
+    S.render();
+    S.fitCanvasToStage();
+    S.syncAllUI();
+  };
+  S.undo = () => { if(history.index<=0) return; history.index--; S.restoreState(history.states[history.index]); S.updateUndoRedo(); };
+  S.redo = () => { if(history.index>=history.states.length-1) return; history.index++; S.restoreState(history.states[history.index]); S.updateUndoRedo(); };
+  S.showToast = m => { const t=document.getElementById('toast'); if(!t) return; t.textContent=m; t.classList.add('show'); clearTimeout(timer); timer=setTimeout(()=>t.classList.remove('show'),2200); };
+  S.hexToRgb = h => { let v=String(h||'#000000').replace('#',''); if(v.length===3)v=v.split('').map(c=>c+c).join(''); const n=parseInt(v.padEnd(6,'0').slice(0,6),16); return {r:(n>>16)&255,g:(n>>8)&255,b:n&255}; };
+  S.rgba = (h,o) => { const {r,g,b}=S.hexToRgb(h); return `rgba(${r},${g},${b},${Math.max(0,Math.min(100,o))/100})`; };
+  S.detectDirection = t => /[\u0590-\u08FF]/.test(t||'') ? 'rtl' : 'ltr';
 })();
