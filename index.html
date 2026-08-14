@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="enhancements.css">
 </head>
 <body>
   <div class="app">
@@ -53,9 +54,18 @@
         <div class="inspector-empty" id="inspectorEmpty"><div class="empty-icon">◇</div><strong>لا يوجد عنصر محدد</strong><span>اختر صورة أو نصًا من مساحة العمل لتعديل خصائصه.</span></div>
         <div class="inspector-content" id="inspectorContent" hidden>
           <div class="inspector-title-row"><div><div class="eyebrow" id="activeElementType">عنصر</div><strong id="activeElementName">العنصر المحدد</strong></div><button class="icon-btn danger" id="deleteInspectorBtn">⌫</button></div>
-          <div class="inspector-group" id="textInspector" hidden><label class="field-label">النص</label><textarea id="textContent" rows="3"></textarea><div class="field-row two"><label>الحجم<input type="number" id="fontSize" min="12" max="260" step="1"></label><label>اللون<input type="color" id="textColor"></label></div><label class="switch-row"><span>احتواء تلقائي داخل التصميم</span><input type="checkbox" id="textAutoFit" checked></label><label class="field-label">معرّف الترجمة</label><input type="text" id="translationKey" placeholder="text_1"></div>
-          <div class="inspector-group" id="imageInspector" hidden><label class="field-label">الإطار</label><div class="segmented" id="deviceGrid"><button data-frame="none" class="active">بدون</button><button data-frame="rounded">ناعم</button><button data-frame="iphone">iPhone</button><button data-frame="samsung">Samsung</button></div><div class="field-row two"><label>تدوير الزوايا<input type="range" id="borderRadiusSlider" min="0" max="100"></label><label>لون الإطار<input type="color" id="frameColorPicker"></label></div></div>
-          <div class="inspector-group"><div class="group-title">الموضع والحجم</div><div class="field-row two"><label>الحجم<input type="range" id="elementScale" min="10" max="300" value="100"></label><label>الدوران<input type="range" id="elementRotation" min="-180" max="180" value="0"></label></div><div class="button-row"><button class="btn btn-secondary" id="centerXBtn">توسيط أفقي</button><button class="btn btn-secondary" id="centerYBtn">توسيط عمودي</button></div></div>
+          <div class="inspector-group" id="textInspector" hidden><label class="field-label">النص</label><textarea id="textContent" rows="3"></textarea><div class="field-row two"><label>حجم الخط<input type="number" id="fontSize" min="8" max="1600" step="1"></label><label>اللون<input type="color" id="textColor"></label></div><div class="inline-stepper"><button type="button" id="fontSizeDown">−</button><span>حجم الخط</span><button type="button" id="fontSizeUp">＋</button></div><label class="switch-row"><span>احتواء تلقائي عند تغيير النص والترجمة</span><input type="checkbox" id="textAutoFit" checked></label><label class="field-label">معرّف الترجمة</label><input type="text" id="translationKey" placeholder="text_1"></div>
+          <div class="inspector-group" id="imageInspector" hidden><label class="field-label">إطار الهاتف</label><div class="frame-grid" id="deviceGrid"></div><div class="field-row two"><label>تدوير الزوايا<input type="range" id="borderRadiusSlider" min="0" max="140"></label><label>لون الإطار<input type="color" id="frameColorPicker"></label></div></div>
+          <div class="inspector-group">
+            <div class="group-title">الموضع والحجم</div>
+            <div class="scale-stepper" aria-label="حجم العنصر"><button type="button" class="scale-step-btn" id="elementScaleDown">−</button><div class="scale-value-wrap"><input type="number" id="elementScaleValue" min="5" max="1200" step="1" value="100"><span>%</span></div><button type="button" class="scale-step-btn" id="elementScaleUp">＋</button></div>
+            <input type="range" id="elementScale" min="5" max="1200" value="100" step="1">
+            <label class="switch-row aspect-switch"><span><strong>الحفاظ على نسبة الأبعاد</strong><small>أوقفه لتمديد العرض والارتفاع بشكل مستقل</small></span><input type="checkbox" id="aspectLock" checked></label>
+            <div class="field-row two axis-scale-fields"><label>العرض %<input type="number" id="elementScaleX" min="5" max="1200" step="1" value="100"></label><label>الارتفاع %<input type="number" id="elementScaleY" min="5" max="1200" step="1" value="100"></label></div>
+            <label>الدوران<input type="range" id="elementRotation" min="-180" max="180" value="0"></label>
+            <p class="gesture-hint">على الهاتف: استخدم القرص بإصبعين لتكبير أو تصغير العنصر المحدد، أو اسحب مقابض التحديد حوله.</p>
+            <div class="button-row"><button class="btn btn-secondary" id="centerXBtn">توسيط أفقي</button><button class="btn btn-secondary" id="centerYBtn">توسيط عمودي</button></div>
+          </div>
           <div class="inspector-group shadow-group"><div class="group-title-row"><div><div class="group-title no-margin">الظل</div><div class="section-help">يتبع شفافية وحواف الصورة تلقائيًا.</div></div><label class="switch"><input type="checkbox" id="shadowEnabled"><span></span></label></div><div id="shadowControls"><div class="field-row two"><label>النعومة<input type="range" id="shadowBlur" min="0" max="120"></label><label>الشفافية<input type="range" id="shadowOpacity" min="0" max="100"></label></div><div class="field-row two"><label>أفقي<input type="range" id="shadowX" min="-80" max="80"></label><label>عمودي<input type="range" id="shadowY" min="-80" max="120"></label></div><label class="field-label">لون الظل</label><input type="color" id="shadowColor" value="#111827"></div></div>
         </div>
       </aside>
