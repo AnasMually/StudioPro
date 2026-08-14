@@ -18,6 +18,11 @@
   transform.onload=()=>{
     const properties=document.createElement('script');
     properties.src='property-enhancements.js?v=20260814-1';
+    properties.onload=()=>{
+      const rounded=document.createElement('script');
+      rounded.src='rounded-border-enhancements.js?v=20260814-1';
+      document.body.appendChild(rounded);
+    };
     document.body.appendChild(properties);
   };
   document.body.appendChild(transform);
