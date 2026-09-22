@@ -166,6 +166,24 @@
     palette.style.right='auto';palette.style.bottom='auto';
   }
 
+  function removeLegacyZoomBars(){
+    document.querySelectorAll('.desktop-stage-zoom').forEach(el=>el.remove());
+  }
+
+  function keepOnlyMovableZoom(){
+    removeLegacyZoomBars();
+    const observer=new MutationObserver(mutations=>{
+      for(const mutation of mutations){
+        for(const node of mutation.addedNodes){
+          if(!(node instanceof Element))continue;
+          if(node.matches?.('.desktop-stage-zoom'))node.remove();
+          node.querySelectorAll?.('.desktop-stage-zoom').forEach(el=>el.remove());
+        }
+      }
+    });
+    observer.observe(document.body,{childList:true,subtree:true});
+  }
+
   function makeZoomPaletteDraggable(){
     const row=document.querySelector('.zoom-row'),host=document.querySelector('.stage-column');
     if(!row||!host||row.dataset.floatingZoom==='1')return;
@@ -204,9 +222,11 @@
   }
 
   installStyles();
+  keepOnlyMovableZoom();
   decorateLayerRows();
   bindLayerReordering();
   makeZoomPaletteDraggable();
+  removeLegacyZoomBars();
 
   const langObserver=new MutationObserver(()=>{
     document.querySelectorAll('.layer-drag-handle').forEach(h=>{h.title=tr('reorder');h.setAttribute('aria-label',tr('reorder'));});
