@@ -27,8 +27,22 @@
       .element-item.layer-drop-before::before{content:'';position:absolute;left:6px;right:6px;top:-5px;height:3px;border-radius:999px;background:var(--accent);box-shadow:0 0 0 2px rgba(91,92,226,.10)}
       .element-item.layer-drop-after::after{content:'';position:absolute;left:6px;right:6px;bottom:-5px;height:3px;border-radius:999px;background:var(--accent);box-shadow:0 0 0 2px rgba(91,92,226,.10)}
       .stage-column{position:relative}
-      .stage{overflow:auto!important;display:flex!important;align-items:safe center!important;justify-content:safe center!important;overscroll-behavior:contain;scrollbar-gutter:stable both-edges}
-      .stage #mainCanvas{flex:0 0 auto}
+      .stage{overflow:auto!important;display:block!important;position:relative!important;overscroll-behavior:contain;scrollbar-gutter:stable;scrollbar-width:auto;scrollbar-color:var(--border-strong) var(--stage);touch-action:pan-x pan-y!important}
+      .stage::-webkit-scrollbar{width:12px;height:12px}
+      .stage::-webkit-scrollbar-track{background:var(--stage)}
+      .stage::-webkit-scrollbar-thumb{background:var(--border-strong);border:3px solid var(--stage);border-radius:999px}
+      .stage::-webkit-scrollbar-corner{background:var(--stage)}
+      .workspace-scroll-content{box-sizing:border-box;display:grid;place-items:center;width:max-content;height:max-content;min-width:100%;min-height:100%;padding:18px;position:relative}
+      .workspace-scroll-content #mainCanvas{display:block;flex:0 0 auto}
+      .workspace-scrollbar{position:absolute;z-index:35;border-radius:999px;background:color-mix(in srgb,var(--border) 72%,transparent);opacity:.82;transition:opacity .15s ease}
+      .workspace-scrollbar.hidden{display:none}
+      .workspace-scrollbar-y{top:52px;bottom:10px;right:6px;width:8px}
+      .workspace-scrollbar-x{left:10px;right:18px;bottom:6px;height:8px}
+      .workspace-scroll-thumb{position:absolute;border-radius:999px;background:var(--muted);cursor:grab;touch-action:none;min-width:28px;min-height:28px}
+      .workspace-scroll-thumb:active{cursor:grabbing;background:var(--text)}
+      .workspace-scrollbar-y .workspace-scroll-thumb{left:0;right:0;min-width:0}
+      .workspace-scrollbar-x .workspace-scroll-thumb{top:0;bottom:0;min-height:0}
+      @media(max-width:780px){.workspace-scroll-content{padding:10px}.workspace-scrollbar-y{top:48px;bottom:8px;right:4px;width:7px}.workspace-scrollbar-x{left:8px;right:15px;bottom:4px;height:7px}}
       .workspace-zoom-float{position:absolute!important;z-index:36;display:flex!important;align-items:center;gap:6px!important;margin:0!important;padding:6px!important;border:1px solid var(--border)!important;border-radius:13px!important;background:rgba(255,255,255,.94)!important;backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(31,41,55,.14);direction:ltr;max-width:calc(100% - 16px);touch-action:auto}
       .workspace-zoom-float #zoomDisplay{min-width:38px!important}
       .workspace-zoom-drag{width:30px;height:30px;min-width:30px;display:grid;place-items:center;border:0;border-radius:8px;background:var(--panel-soft);color:var(--muted);cursor:grab;touch-action:none;user-select:none;font-size:16px;line-height:1;padding:0}
@@ -224,9 +238,77 @@
   }
 
   function enableScrollableZoomedStage(){
-    const stage=document.getElementById('canvasArea'),canvas=S.canvas;
-    if(!stage||!canvas||stage.dataset.panBound==='1')return;
+    const stage=document.getElementById('canvasArea'),canvas=S.canvas,host=document.querySelector('.stage-column');
+    if(!stage||!canvas||!host||stage.dataset.panBound==='1')return;
     stage.dataset.panBound='1';
+
+    // A real content wrapper gives the canvas physical overflow dimensions.
+    // This avoids flex-centering swallowing the scrollable top/left area at high zoom.
+    let content=stage.querySelector('.workspace-scroll-content');
+    if(!content){
+      content=document.createElement('div');
+      content.className='workspace-scroll-content';
+      stage.insertBefore(content,canvas);
+      content.appendChild(canvas);
+    }
+
+    // Persistent custom rails are useful on mobile browsers that hide native scrollbars.
+    const makeRail=axis=>{
+      const rail=document.createElement('div');
+      rail.className=`workspace-scrollbar workspace-scrollbar-${axis} hidden`;
+      const thumb=document.createElement('div');thumb.className='workspace-scroll-thumb';
+      rail.appendChild(thumb);host.appendChild(rail);
+      return{rail,thumb,axis};
+    };
+    const rails=[makeRail('y'),makeRail('x')];
+
+    const syncRails=()=>{
+      const maxY=Math.max(0,stage.scrollHeight-stage.clientHeight),maxX=Math.max(0,stage.scrollWidth-stage.clientWidth);
+      rails.forEach(({rail,thumb,axis})=>{
+        const vertical=axis==='y',max=vertical?maxY:maxX;
+        rail.classList.toggle('hidden',max<=1);
+        if(max<=1)return;
+        const track=vertical?rail.clientHeight:rail.clientWidth;
+        const client=vertical?stage.clientHeight:stage.clientWidth;
+        const total=vertical?stage.scrollHeight:stage.scrollWidth;
+        const size=Math.max(28,Math.min(track,track*(client/total)));
+        const travel=Math.max(0,track-size);
+        const pos=(vertical?stage.scrollTop:stage.scrollLeft)/max*travel;
+        if(vertical){thumb.style.height=`${size}px`;thumb.style.top=`${pos}px`;}
+        else{thumb.style.width=`${size}px`;thumb.style.left=`${pos}px`;}
+      });
+    };
+
+    rails.forEach(({rail,thumb,axis})=>{
+      let drag=null;
+      thumb.addEventListener('pointerdown',e=>{
+        e.preventDefault();e.stopPropagation();thumb.setPointerCapture?.(e.pointerId);
+        drag={id:e.pointerId,start:axis==='y'?e.clientY:e.clientX,scroll:axis==='y'?stage.scrollTop:stage.scrollLeft};
+      });
+      thumb.addEventListener('pointermove',e=>{
+        if(!drag||drag.id!==e.pointerId)return;
+        e.preventDefault();
+        const track=axis==='y'?rail.clientHeight:rail.clientWidth;
+        const size=axis==='y'?thumb.offsetHeight:thumb.offsetWidth;
+        const travel=Math.max(1,track-size);
+        const max=axis==='y'?stage.scrollHeight-stage.clientHeight:stage.scrollWidth-stage.clientWidth;
+        const delta=(axis==='y'?e.clientY:e.clientX)-drag.start;
+        const next=drag.scroll+(delta/travel)*max;
+        if(axis==='y')stage.scrollTop=next;else stage.scrollLeft=next;
+      });
+      const finish=e=>{if(drag&&drag.id===e.pointerId)drag=null;};
+      thumb.addEventListener('pointerup',finish);thumb.addEventListener('pointercancel',finish);
+      rail.addEventListener('pointerdown',e=>{
+        if(e.target===thumb)return;
+        const rr=rail.getBoundingClientRect(),ratio=axis==='y'?(e.clientY-rr.top)/rr.height:(e.clientX-rr.left)/rr.width;
+        const max=axis==='y'?stage.scrollHeight-stage.clientHeight:stage.scrollWidth-stage.clientWidth;
+        if(axis==='y')stage.scrollTop=max*ratio;else stage.scrollLeft=max*ratio;
+      });
+    });
+
+    stage.addEventListener('scroll',syncRails,{passive:true});
+    const resizeObserver=new ResizeObserver(syncRails);resizeObserver.observe(stage);resizeObserver.observe(canvas);resizeObserver.observe(content);
+    requestAnimationFrame(syncRails);
 
     // Mouse wheel / trackpad scrolls the zoomed canvas naturally.
     stage.addEventListener('wheel',e=>{
@@ -263,6 +345,24 @@
     const end=e=>{if(pan&&pan.id===e.pointerId){e.preventDefault();e.stopImmediatePropagation();pan=null;}};
     canvas.addEventListener('pointerup',end,true);
     canvas.addEventListener('pointercancel',end,true);
+
+    // Keep custom rails in sync when zoom or canvas size changes programmatically.
+    const oldFit=S.fitCanvasToStage?.bind(S);
+    if(oldFit&&!S._scrollAwareFit){
+      S._scrollAwareFit=true;
+      S.fitCanvasToStage=function(){
+        const prevMaxX=Math.max(0,stage.scrollWidth-stage.clientWidth),prevMaxY=Math.max(0,stage.scrollHeight-stage.clientHeight);
+        const cx=prevMaxX?stage.scrollLeft/prevMaxX:.5,cy=prevMaxY?stage.scrollTop/prevMaxY:.5;
+        const result=oldFit.apply(this,arguments);
+        requestAnimationFrame(()=>{
+          const nextMaxX=Math.max(0,stage.scrollWidth-stage.clientWidth),nextMaxY=Math.max(0,stage.scrollHeight-stage.clientHeight);
+          if(nextMaxX)stage.scrollLeft=nextMaxX*cx;
+          if(nextMaxY)stage.scrollTop=nextMaxY*cy;
+          syncRails();
+        });
+        return result;
+      };
+    }
   }
 
   installStyles();
