@@ -4,8 +4,8 @@
   const codes=['ar','en','zh-CN','es','hi'];
   const rtl=new Set(['ar']);
   const files=['lang-ar.js','lang-en.js','lang-zh-CN.js','lang-es.js','lang-hi.js'];
-  const css=document.createElement('link');css.rel='stylesheet';css.href='site-preferences.css?v=20260815-1';document.head.appendChild(css);
-  const load=src=>new Promise(r=>{const s=document.createElement('script');s.src=src+'?v=20260815-1';s.onload=s.onerror=r;document.head.appendChild(s)});
+  const css=document.createElement('link');css.rel='stylesheet';css.href='site-preferences.css?v=20260922-1';document.head.appendChild(css);
+  const load=src=>new Promise(r=>{const s=document.createElement('script');s.src=src+'?v=20260922-1';s.onload=s.onerror=r;document.head.appendChild(s)});
   Promise.all(files.map(load)).then(init);
 
   function init(){
