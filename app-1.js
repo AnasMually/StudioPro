@@ -5,8 +5,48 @@
   const ctx = canvas.getContext('2d', { alpha: false });
   const canvasArea = document.getElementById('canvasArea');
 
+  // Exact Google Play / screenshot localization targets.
+  // Keep locale tags unchanged: they are used as stable JSON keys and export filenames.
   const languages = [
-    ['en','English'],['ja','Japanese'],['ko','Korean'],['de','German'],['fr','French'],['zh-CN','Chinese Simplified'],['zh-TW','Chinese Traditional'],['es','Spanish'],['it','Italian'],['nl','Dutch'],['sv','Swedish'],['no','Norwegian'],['da','Danish'],['fi','Finnish'],['pl','Polish'],['cs','Czech'],['sk','Slovak'],['ro','Romanian'],['hu','Hungarian'],['uk','Ukrainian'],['pt','Portuguese'],['ru','Russian'],['tr','Turkish'],['ar','Arabic'],['he','Hebrew'],['id','Indonesian'],['ms','Malay'],['vi','Vietnamese'],['th','Thai'],['hi','Hindi']
+    ['en-US','English (United States)'],
+    ['ar','Arabic'],
+    ['bn-BD','Bangla'],
+    ['ca','Catalan'],
+    ['zh-HK','Chinese (Hong Kong)'],
+    ['zh-CN','Chinese (Simplified)'],
+    ['zh-TW','Chinese (Traditional)'],
+    ['cs-CZ','Czech'],
+    ['da-DK','Danish'],
+    ['nl-NL','Dutch'],
+    ['en-AU','English (Australia)'],
+    ['en-CA','English (Canada)'],
+    ['en-GB','English (United Kingdom)'],
+    ['en-IN','English (India)'],
+    ['en-SG','English (Singapore)'],
+    ['fi-FI','Finnish'],
+    ['fr-CA','French (Canada)'],
+    ['fr-FR','French (France)'],
+    ['de-DE','German'],
+    ['iw-IL','Hebrew'],
+    ['hi-IN','Hindi'],
+    ['id','Indonesian'],
+    ['it-IT','Italian'],
+    ['ja-JP','Japanese'],
+    ['ko-KR','Korean'],
+    ['no-NO','Norwegian'],
+    ['pl-PL','Polish'],
+    ['pt-BR','Portuguese (Brazil)'],
+    ['pt-PT','Portuguese (Portugal)'],
+    ['ru-RU','Russian'],
+    ['sk','Slovak'],
+    ['es-419','Spanish (Latin America)'],
+    ['es-ES','Spanish (Spain)'],
+    ['es-US','Spanish (United States)'],
+    ['sv-SE','Swedish'],
+    ['tr-TR','Turkish'],
+    ['uk','Ukrainian'],
+    ['ur','Urdu'],
+    ['vi','Vietnamese']
   ];
 
   const backgroundPresets = [
