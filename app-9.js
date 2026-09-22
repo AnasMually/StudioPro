@@ -27,6 +27,8 @@
       .element-item.layer-drop-before::before{content:'';position:absolute;left:6px;right:6px;top:-5px;height:3px;border-radius:999px;background:var(--accent);box-shadow:0 0 0 2px rgba(91,92,226,.10)}
       .element-item.layer-drop-after::after{content:'';position:absolute;left:6px;right:6px;bottom:-5px;height:3px;border-radius:999px;background:var(--accent);box-shadow:0 0 0 2px rgba(91,92,226,.10)}
       .stage-column{position:relative}
+      .stage{overflow:auto!important;display:flex!important;align-items:safe center!important;justify-content:safe center!important;overscroll-behavior:contain;scrollbar-gutter:stable both-edges}
+      .stage #mainCanvas{flex:0 0 auto}
       .workspace-zoom-float{position:absolute!important;z-index:36;display:flex!important;align-items:center;gap:6px!important;margin:0!important;padding:6px!important;border:1px solid var(--border)!important;border-radius:13px!important;background:rgba(255,255,255,.94)!important;backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(31,41,55,.14);direction:ltr;max-width:calc(100% - 16px);touch-action:auto}
       .workspace-zoom-float #zoomDisplay{min-width:38px!important}
       .workspace-zoom-drag{width:30px;height:30px;min-width:30px;display:grid;place-items:center;border:0;border-radius:8px;background:var(--panel-soft);color:var(--muted);cursor:grab;touch-action:none;user-select:none;font-size:16px;line-height:1;padding:0}
@@ -221,8 +223,51 @@
     const ro=new ResizeObserver(()=>restoreZoomPosition(host,row));ro.observe(host);
   }
 
+  function enableScrollableZoomedStage(){
+    const stage=document.getElementById('canvasArea'),canvas=S.canvas;
+    if(!stage||!canvas||stage.dataset.panBound==='1')return;
+    stage.dataset.panBound='1';
+
+    // Mouse wheel / trackpad scrolls the zoomed canvas naturally.
+    stage.addEventListener('wheel',e=>{
+      if(stage.scrollHeight<=stage.clientHeight&&stage.scrollWidth<=stage.clientWidth)return;
+      if(e.ctrlKey)return;
+      if(Math.abs(e.deltaX)>0||Math.abs(e.deltaY)>0){
+        e.preventDefault();
+        stage.scrollLeft+=e.deltaX;
+        stage.scrollTop+=e.deltaY;
+      }
+    },{passive:false});
+
+    // On touch, dragging an empty part of the canvas pans the workspace.
+    let pan=null;
+    const canvasPoint=e=>{
+      const r=canvas.getBoundingClientRect();
+      return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};
+    };
+    canvas.addEventListener('pointerdown',e=>{
+      if(e.pointerType!=='touch')return;
+      const hit=S.topHit?.(canvasPoint(e));
+      if(hit)return;
+      if(stage.scrollHeight<=stage.clientHeight&&stage.scrollWidth<=stage.clientWidth)return;
+      e.preventDefault();e.stopImmediatePropagation();
+      canvas.setPointerCapture?.(e.pointerId);
+      pan={id:e.pointerId,x:e.clientX,y:e.clientY,left:stage.scrollLeft,top:stage.scrollTop};
+    },true);
+    canvas.addEventListener('pointermove',e=>{
+      if(!pan||pan.id!==e.pointerId)return;
+      e.preventDefault();e.stopImmediatePropagation();
+      stage.scrollLeft=pan.left-(e.clientX-pan.x);
+      stage.scrollTop=pan.top-(e.clientY-pan.y);
+    },true);
+    const end=e=>{if(pan&&pan.id===e.pointerId){e.preventDefault();e.stopImmediatePropagation();pan=null;}};
+    canvas.addEventListener('pointerup',end,true);
+    canvas.addEventListener('pointercancel',end,true);
+  }
+
   installStyles();
   keepOnlyMovableZoom();
+  enableScrollableZoomedStage();
   decorateLayerRows();
   bindLayerReordering();
   makeZoomPaletteDraggable();
